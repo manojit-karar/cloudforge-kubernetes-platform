@@ -19,8 +19,8 @@ spec:
     spec:
       containers:
       - name: cloudforge-app
-        image: cloudforge-app:v1
-        imagePullPolicy: Never
+        image: manojitkarar/cloudforge-app:latest
+        imagePullPolicy: Always
 
         ports:
         - containerPort: 5000
