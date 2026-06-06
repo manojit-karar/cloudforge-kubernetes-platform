@@ -13,11 +13,31 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Normalize Docker Hub credentials
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "::add-mask::$DOCKER_USERNAME"
+          echo "::add-mask::$DOCKER_PASSWORD"
+          CLEAN_USERNAME="$(printf '%s' "$DOCKER_USERNAME" | tr -d '\r\n')"
+          CLEAN_PASSWORD="$(printf '%s' "$DOCKER_PASSWORD" | tr -d '\r\n')"
+          if [ -z "$CLEAN_USERNAME" ] || [ -z "$CLEAN_PASSWORD" ]; then
+            echo "Sanitized Docker Hub credentials must be set and non-empty."
+            exit 1
+          fi
+          echo "::add-mask::$CLEAN_USERNAME"
+          echo "::add-mask::$CLEAN_PASSWORD"
+          {
+            echo "DOCKER_USERNAME_CLEAN=$CLEAN_USERNAME"
+            echo "DOCKER_PASSWORD_CLEAN=$CLEAN_PASSWORD"
+          } >> "$GITHUB_ENV"
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_USERNAME_CLEAN }}
+          password: ${{ env.DOCKER_PASSWORD_CLEAN }}
 
       - name: Build Docker Image
         run: |
